@@ -1,13 +1,21 @@
 import telebot
 from telebot import types
 import datetime
-from data.music import *
 import random
+
+from data.music import *
+from data.film_parser import parser, img_installer
 
 TOKEN = '5169770075:AAGPtGFOXMfTwVw8JwYIEWurX4pyXdLBNbA'
 PASS = '24.05.2020'
 bot = telebot.TeleBot(TOKEN)
 accepted_chats = []
+try:
+    with open('chats_id_base.txt', 'r') as f:
+        accepted_chats = [int(i) for i in f.readline().split(';') if i != '']
+except FileNotFoundError:
+    accepted_chats = []
+print(accepted_chats)
 
 music_mode = False
 bad_mood_mode = False
@@ -34,6 +42,10 @@ def get_pass_mess(message):
     if message.chat.id not in accepted_chats:
         if message.text == f'/pass {PASS}':
             accepted_chats.append(message.chat.id)
+            with open('chats_id_base.txt', 'a') as file:
+                file.write(f'{message.chat.id};')
+            print(accepted_chats)
+
             bot.send_message(
                 message.chat.id, 'Рад тебя видеть, солнышко'
             )
@@ -66,7 +78,7 @@ def start_message(message):
         day_time = 'Добрый вечер'
 
     # создание доп клавиатуры
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup = types.ReplyKeyboardMarkup()
     item1 = types.KeyboardButton("🙉Хочу музычки")
     item2 = types.KeyboardButton('😎Хочу фильмец')
     item3 = types.KeyboardButton('😿Мне грустно')
@@ -98,18 +110,20 @@ def message_render(message):
     global bad_mood_mode
     global cinematic_mode
     if message.chat.type == 'private':
+        print(message.text)
 
         # MUSIC MAIN
         if message.text == '🙉Хочу музычки':
             music_mode = True
 
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup = types.ReplyKeyboardMarkup()
             item1 = types.KeyboardButton("Хочу гулять одна в наушниках")
             item2 = types.KeyboardButton('Хочу прыгать по комнате и орать')
             item3 = types.KeyboardButton('Ничего не хочу')
             item4 = types.KeyboardButton('К тебе хочу')
-            item5 = types.KeyboardButton('Я передумала...')
-            markup.add(item1, item2, item3, item4, item5)
+            item5 = types.KeyboardButton('Спец раздел')  # !!!!!!
+            item6 = types.KeyboardButton('Я передумала...')
+            markup.add(item1, item2, item3, item4, item5, item6)
 
             bot.send_message(
                 message.chat.id, f'Что по настроению?',
@@ -120,11 +134,12 @@ def message_render(message):
         if message.text == '😎Хочу фильмец':
             cinematic_mode = True
 
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup = types.ReplyKeyboardMarkup()
             item1 = types.KeyboardButton("Хочу в кино")
             item2 = types.KeyboardButton('Хочу сериал')
             item3 = types.KeyboardButton('Хочу фильм')
             item4 = types.KeyboardButton('Я передумала...')
+            markup.add(item1, item2, item3, item4)
 
             bot.send_message(
                 message.chat.id, f'Что именно ты хочешь?',
@@ -135,8 +150,8 @@ def message_render(message):
         if message.text == '😿Мне грустно':
             bad_mood_mode = True
 
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            item1 = types.KeyboardButton("Родители опять творят дичь")
+            markup = types.ReplyKeyboardMarkup()
+            item1 = types.KeyboardButton("Родители творят дичь")
             item2 = types.KeyboardButton('Неудачный день...')
             item3 = types.KeyboardButton('Просто нет настроения')
             item4 = types.KeyboardButton('К тебе хочу')
@@ -181,10 +196,12 @@ def message_render(message):
             # Возвращение в главное меню
             if message.text == 'Я передумала...':
                 music_mode = False
-                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                markup = types.ReplyKeyboardMarkup()
                 item1 = types.KeyboardButton("🙉Хочу музычки")
-                item2 = types.KeyboardButton('Пока не знаю чего хочу')
-                markup.add(item1, item2)
+                item2 = types.KeyboardButton('😎Хочу фильмец')
+                item3 = types.KeyboardButton('😿Мне грустно')
+                item4 = types.KeyboardButton('Пока не знаю чего хочу')
+                markup.add(item1, item2, item3, item4)
                 bot.send_message(
                     message.chat.id,
                     f'Ладно...',
@@ -194,7 +211,20 @@ def message_render(message):
         # FILMS MODE TREE
         if cinematic_mode:
             if message.text == 'Хочу в кино':
-                pass
+                headlines, description, time = parser(1)
+                img_installer()
+                bot.send_message(
+                    message.chat.id,
+                    f'Вот что сейчас в кино:'
+                )
+                for i in range(len(headlines)):
+                    bot.send_message(
+                        message.chat.id,
+                        f'{headlines[i]}'
+                        f'{description[i]}'
+                        f'{time[i]}'
+
+                    )
             if message.text == 'Хочу сериал':
                 pass
             if message.text == 'Хочу фильм':
