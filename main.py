@@ -52,6 +52,11 @@ def get_pass_mess(message):
                 message.chat.id, 'Рад тебя видеть, солнышко'
             )
             bot.send_message(
+                message.chat.id,
+                f'Ты можешь ввести /help для вывода списка команд'
+                f'Если ты введешь команду /start то появится основное меню'
+            )
+            bot.send_message(
                 738718406,
                 'NEW USER DETECTED'
             )
@@ -65,7 +70,8 @@ def get_pass_mess(message):
         )
 
 
-@bot.message_handler(func=lambda message: message.chat.id not in accepted_chats, commands=['start'])
+@bot.message_handler(func=lambda message: message.chat.id not in accepted_chats,
+                     commands=['start', 'pass', 'send_sms', 'escape'])
 def accepted_checker(message):
     bot.send_message(message.chat.id, 'Этот бот только для одного человека. Подтвердите свою личность.')
 
@@ -74,7 +80,7 @@ def accepted_checker(message):
 def send_mess_to_me_checker(message):
     bot.send_message(
         738718406,
-        f'SUCSESSFUL'
+        f'{message.text.replace("/send_sms", "")}'
     )
     bot.send_message(
         message.chat.id,
@@ -84,7 +90,28 @@ def send_mess_to_me_checker(message):
 
 @bot.message_handler(commands=['escape'])
 def escape_from_all(message):
-    pass
+    global music_mode
+    global bad_mood_mode
+    global cinematic_mode
+    global wanna_to_you_mode
+    music_mode = False
+    bad_mood_mode = False
+    cinematic_mode = False
+    wanna_to_you_mode = False
+    clear_logs()
+
+    markup = types.ReplyKeyboardMarkup()
+    item1 = types.KeyboardButton("🙉Хочу музычки")
+    item2 = types.KeyboardButton('😎Хочу фильмец')
+    item3 = types.KeyboardButton('😿Мне грустно')
+    item4 = types.KeyboardButton('Хочу провести время с тобой👉👈')
+    item5 = types.KeyboardButton('Пока не знаю чего хочу')
+    markup.add(item1, item2, item3, item4, item5)
+    bot.send_message(
+        message.chat.id,
+        f'Выход в главное меню...',
+        reply_markup=markup
+    )
 
 
 @bot.message_handler(commands=['start'])
@@ -110,9 +137,14 @@ def start_message(message):
     markup.add(item1, item2, item3, item4, item5)
     bot.send_message(
         message.chat.id,
-        f'{day_time}, Анастасия, начнём?)',
+        f'{day_time}, солнышко, начнём?)',
         parse_mode='html',
         reply_markup=markup
+    )
+    bot.send_message(
+        message.chat.id,
+        f'Ты можешь ввести /help для вывода списка команд'
+        f'Если ты введешь команду /start то появится основное меню'
     )
 
 
@@ -124,6 +156,8 @@ def helper(message):
         список команд: \n
         \"/start\" - начать работу \n
         \"/pass + пароль\" - ввод пароля
+        \"/escape\" - выход из всех разделов в главное меню
+        \"/send_sms + сообщение - отправить мне сообщение\"
         '''
     )
 
@@ -420,7 +454,11 @@ def message_render(message):
                 )
 
             if message.text == 'Хочу сериальчик':
-                pass
+                bot.send_message(
+                    message.chat.id,
+                    f'Вот рандомный сериальчик\n'
+                    f'{serials[random.randint(1, len(serials))]}'
+                )
 
             if message.text == 'Я передумала...':
                 cinematic_mode = False
