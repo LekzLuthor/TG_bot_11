@@ -4,7 +4,8 @@ import datetime
 import random
 
 from data.music import *
-from data.film_parser import parser, img_installer
+from data.films import *
+from data.film_parser import parser, img_installer, clear_logs
 
 TOKEN = '5169770075:AAGPtGFOXMfTwVw8JwYIEWurX4pyXdLBNbA'
 PASS = '24.05.2020'
@@ -20,6 +21,7 @@ print(accepted_chats)
 music_mode = False
 bad_mood_mode = False
 cinematic_mode = False
+wanna_to_you_mode = False
 
 
 # morning=1, day=2, evening=3, night=0
@@ -49,6 +51,10 @@ def get_pass_mess(message):
             bot.send_message(
                 message.chat.id, 'Рад тебя видеть, солнышко'
             )
+            bot.send_message(
+                738718406,
+                'NEW USER DETECTED'
+            )
         else:
             bot.send_message(
                 message.chat.id, 'Этот бот только для одного человека. Подтвердите свою личность.'
@@ -62,6 +68,23 @@ def get_pass_mess(message):
 @bot.message_handler(func=lambda message: message.chat.id not in accepted_chats, commands=['start'])
 def accepted_checker(message):
     bot.send_message(message.chat.id, 'Этот бот только для одного человека. Подтвердите свою личность.')
+
+
+@bot.message_handler(commands=['send_sms'])
+def send_mess_to_me_checker(message):
+    bot.send_message(
+        738718406,
+        f'SUCSESSFUL'
+    )
+    bot.send_message(
+        message.chat.id,
+        'сообщение отправленно'
+    )
+
+
+@bot.message_handler(commands=['escape'])
+def escape_from_all(message):
+    pass
 
 
 @bot.message_handler(commands=['start'])
@@ -82,8 +105,9 @@ def start_message(message):
     item1 = types.KeyboardButton("🙉Хочу музычки")
     item2 = types.KeyboardButton('😎Хочу фильмец')
     item3 = types.KeyboardButton('😿Мне грустно')
-    item4 = types.KeyboardButton('Пока не знаю чего хочу')
-    markup.add(item1, item2, item3, item4)
+    item4 = types.KeyboardButton('Хочу провести время с тобой👉👈')
+    item5 = types.KeyboardButton('Пока не знаю чего хочу')
+    markup.add(item1, item2, item3, item4, item5)
     bot.send_message(
         message.chat.id,
         f'{day_time}, Анастасия, начнём?)',
@@ -104,13 +128,48 @@ def helper(message):
     )
 
 
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    try:
+        if call.message:
+            if call.data == 'films_comedy':
+                bot.send_message(
+                    call.message.chat.id,
+                    f'{comedy[random.randint(1, len(comedy))]}'
+                )
+
+            if call.data == 'films_melodramma':
+                bot.send_message(
+                    call.message.chat.id,
+                    f'{moralshina[random.randint(1, len(moralshina))]}'
+                )
+
+            if call.data == 'films_thriller':
+                bot.send_message(
+                    call.message.chat.id,
+                    f'{thrillers[random.randint(1, len(thrillers))]}'
+                )
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text='Хочу какой-нибудь фильмец', reply_markup=None)
+    except Exception as e:
+        print(repr(e))
+
+
 @bot.message_handler(content_types=['text'])
 def message_render(message):
     global music_mode
     global bad_mood_mode
     global cinematic_mode
+    global wanna_to_you_mode
     if message.chat.type == 'private':
         print(message.text)
+
+        if message.text == 'Пока не знаю чего хочу':
+            bot.send_message(
+                message.chat.id,
+                f'Тогда ты можешь написать мне и я помогу тебе с этой проблемой))\n'
+                f't-do.ru/alekzluthor'
+            )
 
         # MUSIC MAIN
         if message.text == '🙉Хочу музычки':
@@ -136,8 +195,8 @@ def message_render(message):
 
             markup = types.ReplyKeyboardMarkup()
             item1 = types.KeyboardButton("Хочу в кино")
-            item2 = types.KeyboardButton('Хочу сериал')
-            item3 = types.KeyboardButton('Хочу фильм')
+            item2 = types.KeyboardButton('Хочу сериальчик')
+            item3 = types.KeyboardButton('Хочу какой-нибудь фильмец')
             item4 = types.KeyboardButton('Я передумала...')
             markup.add(item1, item2, item3, item4)
 
@@ -146,9 +205,32 @@ def message_render(message):
                 reply_markup=markup
             )
 
+        # WANNA TO YOU MODE MAIN
+        if message.text == 'Хочу провести время с тобой👉👈':
+            wanna_to_you_mode = True
+
+            markup = types.ReplyKeyboardMarkup()
+            item1 = types.KeyboardButton("Хочу погулять с тобой")
+            item2 = types.KeyboardButton('Хочу с тобой в кино')
+            item3 = types.KeyboardButton('Хочу вместе посмотреть фильм в дискордике')
+            item4 = types.KeyboardButton('Хочу поиграть в лигу')
+            item5 = types.KeyboardButton('Просто хочу поговорить')
+            item6 = types.KeyboardButton('Обратно в меню')
+            markup.add(item1, item2, item3, item4, item5, item6)
+
+            bot.send_message(
+                message.chat.id,
+                f'Что именно хочешь, солнце?',
+                reply_markup=markup
+            )
+
         # BAD MOOD MAIN
         if message.text == '😿Мне грустно':
             bad_mood_mode = True
+            bot.send_message(
+                738718406,
+                f'!BAD_MOOD_TRIGGER'
+            )
 
             markup = types.ReplyKeyboardMarkup()
             item1 = types.KeyboardButton("Родители творят дичь")
@@ -162,6 +244,91 @@ def message_render(message):
                 message.chat.id, f'Что случилось?',
                 reply_markup=markup
             )
+
+        # WANNA TO YOU TREE
+        if wanna_to_you_mode:
+            if message.text == 'Хочу погулять с тобой':
+                bot.send_message(
+                    message.chat.id,
+                    f'Понял тебя\n'
+                    f'Саше уже отправленно уведомление, жди его под своим окном)',
+                    parse_mode='html'
+                )
+                bot.send_message(
+                    738718406,
+                    f'!WANNA TO YOU: Настя хочет погулять'
+                )
+
+            if message.text == 'Хочу с тобой в кино':
+                bot.send_message(
+                    message.chat.id,
+                    f'Понял принял\n'
+                    f'Саше уже отправленно уведомление, а пока ты можешь посмотреть что сейчас есть в кино\n'
+                    f'Для этого зайди в раздел "😎Хочу фильмец" -> "Хочу в кино"',
+                    parse_mode='html'
+                )
+                bot.send_message(
+                    738718406,
+                    f'!WANNA TO YOU: Настя хочет в кино'
+                )
+
+            if message.text == 'Хочу вместе посмотреть фильм в дискордике':
+                bot.send_message(
+                    message.chat.id,
+                    f'Уииии\n'
+                    f'Я уже отправил Саше уведомление, а пока ты можешь выбрать фильм который хочешь посмотреть\n'
+                    f'Для этого зайди в раздел "😎Хочу фильмец" -> "Хочу фильм"',
+                    parse_mode='html'
+                )
+                bot.send_message(
+                    738718406,
+                    f'!WANNA TO YOU: Настя хочет вместе посмотреть фильм в дискорде'
+                )
+
+            if message.text == 'Хочу поиграть в лигу':
+                bot.send_message(
+                    message.chat.id,
+                    f'Вау)\n'
+                    f'Хорошо, я передам Саше, увидимся в лиге)',
+                    parse_mode='html'
+                )
+                bot.send_message(
+                    738718406,
+                    f'!WANNA TO YOU: Настя хочет в лигу'
+                )
+
+            if message.text == 'Просто хочу поговорить':
+                bot.send_message(
+                    message.chat.id,
+                    f'Ты моё солнце\n'
+                    f'Скоро позвоню тебе, но если я туплю можешь сделать это тут:\n'
+                    f'+79514735636\n'
+                    f't-do.ru/alekzluthor\n',
+                    parse_mode='html'
+                )
+                bot.send_message(
+                    738718406,
+                    f'!WANNA TO YOU: Настя хочет поговорить'
+                )
+
+            if message.text == 'Обратно в меню':
+                wanna_to_you_mode = False
+
+                markup = types.ReplyKeyboardMarkup()
+                item1 = types.KeyboardButton("🙉Хочу музычки")
+                item2 = types.KeyboardButton('😎Хочу фильмец')
+                item3 = types.KeyboardButton('😿Мне грустно')
+                item4 = types.KeyboardButton('Хочу провести время с тобой👉👈')
+                item5 = types.KeyboardButton('Пока не знаю чего хочу')
+                markup.add(item1, item2, item3, item4, item5)
+
+                bot.send_message(
+                    message.chat.id,
+                    f'Я надеюсь ты выходишь, потому что что-то выбрала\n'
+                    f'В любом случае спасибо что заглянула\n'
+                    f'Люблю тебя солнышко, увидимся',
+                    reply_markup=markup
+                )
 
         # MUSIC MODE TREE
         if music_mode:
@@ -200,8 +367,9 @@ def message_render(message):
                 item1 = types.KeyboardButton("🙉Хочу музычки")
                 item2 = types.KeyboardButton('😎Хочу фильмец')
                 item3 = types.KeyboardButton('😿Мне грустно')
-                item4 = types.KeyboardButton('Пока не знаю чего хочу')
-                markup.add(item1, item2, item3, item4)
+                item4 = types.KeyboardButton('Хочу провести время с тобой👉👈')
+                item5 = types.KeyboardButton('Пока не знаю чего хочу')
+                markup.add(item1, item2, item3, item4, item5)
                 bot.send_message(
                     message.chat.id,
                     f'Ладно...',
@@ -210,27 +378,65 @@ def message_render(message):
 
         # FILMS MODE TREE
         if cinematic_mode:
+
             if message.text == 'Хочу в кино':
-                headlines, description, time = parser(1)
+                bot.send_message(
+                    message.chat.id,
+                    f'Подожди секундочку...'
+                )
                 img_installer()
+                headlines, description, time = parser(1)
+                new_time = []
+                for i in time:
+                    j = i.replace("\n", " ")
+                    j = j[2:]
+                    new_time.append(j)
                 bot.send_message(
                     message.chat.id,
                     f'Вот что сейчас в кино:'
                 )
                 for i in range(len(headlines)):
-                    bot.send_message(
-                        message.chat.id,
-                        f'{headlines[i]}'
-                        f'{description[i]}'
-                        f'{time[i]}'
+                    with open(f"/pythonProject1/data/posters/{i}.jpg", 'rb') as poster:
+                        bot.send_photo(
+                            message.chat.id,
+                            poster,
+                            caption=f'{headlines[i]}'
+                                    f'{description[i]}'
+                                    f'Время сеансов:\n'
+                                    f'{new_time[i]}',
+                            parse_mode='HTML'
+                        )
 
-                    )
-            if message.text == 'Хочу сериал':
+            if message.text == 'Хочу какой-нибудь фильмец':
+                inline_markup = types.InlineKeyboardMarkup(row_width=3)
+                item1 = types.InlineKeyboardButton('Комедию', callback_data='films_comedy')
+                item2 = types.InlineKeyboardButton('Мелодрамму', callback_data='films_melodramma')
+                item3 = types.InlineKeyboardButton('Триллер', callback_data='films_thriller')
+                inline_markup.add(item1, item2, item3)
+                bot.send_message(
+                    message.chat.id,
+                    f'Какой жанр?',
+                    reply_markup=inline_markup
+                )
+
+            if message.text == 'Хочу сериальчик':
                 pass
-            if message.text == 'Хочу фильм':
-                pass
+
             if message.text == 'Я передумала...':
                 cinematic_mode = False
+                clear_logs()
+                markup = types.ReplyKeyboardMarkup()
+                item1 = types.KeyboardButton("🙉Хочу музычки")
+                item2 = types.KeyboardButton('😎Хочу фильмец')
+                item3 = types.KeyboardButton('😿Мне грустно')
+                item4 = types.KeyboardButton('Хочу провести время с тобой👉👈')
+                item5 = types.KeyboardButton('Пока не знаю чего хочу')
+                markup.add(item1, item2, item3, item4, item5)
+                bot.send_message(
+                    message.chat.id,
+                    f'Хорошо',
+                    reply_markup=markup
+                )
 
         # BAD MOOD MODE TREE
         if bad_mood_mode:
@@ -246,6 +452,18 @@ def message_render(message):
             # Возвращение в главное меню
             if message.text == 'Стало лучше..)':
                 bad_mood_mode = False
+                markup = types.ReplyKeyboardMarkup()
+                item1 = types.KeyboardButton("🙉Хочу музычки")
+                item2 = types.KeyboardButton('😎Хочу фильмец')
+                item3 = types.KeyboardButton('😿Мне грустно')
+                item4 = types.KeyboardButton('Хочу провести время с тобой👉👈')
+                item5 = types.KeyboardButton('Пока не знаю чего хочу')
+                markup.add(item1, item2, item3, item4, item5)
+                bot.send_message(
+                    message.chat.id,
+                    f'Я рад, солнышко',
+                    reply_markup=markup
+                )
 
 
 if __name__ == '__main__':

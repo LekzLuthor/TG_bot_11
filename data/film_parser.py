@@ -42,6 +42,3 @@ def clear_logs():
     for f in files:
         os.remove(f)
 
-
-# img_installer()
-# clear_logs()
