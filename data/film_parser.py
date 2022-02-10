@@ -30,18 +30,23 @@ def parser(item_code):
 
 def img_installer():
     links = parser(2)
-    try:
-        for i in range(len(links)):
-            p = requests.get(links[i])
-            out = open(f"/pythonProject1/data/posters/{i}.jpg", 'wb')
-            out.write(p.content)
-            out.close()
-    except FileNotFoundError:
-        for i in range(len(links)):
-            p = requests.get(links[i])
-            out = open(f"posters/{i}.jpg", 'wb')
-            out.write(p.content)
-            out.close()
+    for i in range(len(links)):
+        p = requests.get(links[i])
+        out = open(f"{i}.jpg", 'wb')
+        out.write(p.content)
+        out.close()
+    # try:
+    #     for i in range(len(links)):
+    #         p = requests.get(links[i])
+    #         out = open(f"/pythonProject1/data/posters/{i}.jpg", 'wb')
+    #         out.write(p.content)
+    #         out.close()
+    # except FileNotFoundError:
+    #     for i in range(len(links)):
+    #         p = requests.get(links[i])
+    #         out = open(f"{i}.jpg", 'wb')
+    #         out.write(p.content)
+    #         out.close()
 
 
 def clear_logs():

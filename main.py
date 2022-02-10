@@ -88,11 +88,21 @@ def send_mess_to_me_checker(message):
     )
 
 
+# DEBUG FUNCTION
 @bot.message_handler(commands=['check_update'])
 def update_checker(message):
     bot.send_message(
         message.chat.id,
         'ver 0.1.2'
+    )
+
+
+@bot.message_handler(commands=['download_img'])
+def update_checker(message):
+    img_installer()
+    bot.send_message(
+        message.chat.id,
+        'установлено'
     )
 
 
@@ -438,7 +448,7 @@ def message_render(message):
                     f'Вот что сейчас в кино:'
                 )
                 for i in range(len(headlines)):
-                    with open(f"data/posters/{i}.jpg", 'rb') as poster:
+                    with open(f"{i}.jpg", 'rb') as poster:
                         bot.send_photo(
                             message.chat.id,
                             poster,
