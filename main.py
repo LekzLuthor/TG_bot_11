@@ -88,6 +88,14 @@ def send_mess_to_me_checker(message):
     )
 
 
+@bot.message_handler(commands=['check_update'])
+def update_checker(message):
+    bot.send_message(
+        message.chat.id,
+        'ver 0.1.1'
+    )
+
+
 @bot.message_handler(commands=['escape'])
 def escape_from_all(message):
     global music_mode
